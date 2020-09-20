@@ -1,6 +1,8 @@
 <?php
 require_once 'INewsDB.class.php';
-class NewsDB implements INewsDB {
+
+class NewsDB implements INewsDB
+{
     const DB_NAME = 'news.db';
     private $_db;
 
@@ -10,7 +12,32 @@ class NewsDB implements INewsDB {
      */
     public function __construct()
     {
-        $this->_db = new SQLite3(self::DB_NAME);
+        if (!file_exists(self::DB_NAME)) {
+            $this->_db = new SQLite3(self::DB_NAME);
+
+            $this->_db->exec("
+                    CREATE TABLE msgs(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    title TEXT,
+                    category INTEGER,
+                    description TEXT,
+                    source TEXT,
+                    datetime INTEGER
+                    )");
+            $this->_db->exec("
+                    CREATE TABLE category(
+                        id INTEGER,
+                        name TEXT
+                    )");
+            $this->_db->exec("INSERT INTO category(id, name) 
+                                    SELECT 1 as id, 'Политика' as name
+                                    UNION SELECT 2 as id, 'Культура' as name
+                                    UNION SELECT 3 as id, 'Спорт' as name");
+
+            $this->_db->lastErrorMsg();
+        } else {
+            $this->_db->open(self::DB_NAME);
+        }
     }
 
     public function __destruct()
@@ -26,6 +53,7 @@ class NewsDB implements INewsDB {
     {
         return $this->_db;
     }
+
     function saveNews($title, $category, $description, $source)
     {
     }
